@@ -1,42 +1,67 @@
 import React, { useState, useEffect, } from 'react';
-import webSocket from 'socket.io-client';
+import { Card, Input, Button, } from 'antd';
+import { connect } from 'react-redux';
+import { messageActions, } from './controllers';
+import 'antd/dist/antd.css';
 import './App.css';
 
-function App() {
-	const [ws, setWs] = useState(null)
-	useEffect(() => {
-		setWs(webSocket('http://localhost:3000'))
-	}, []);
-    useEffect(()=>{
-        if(ws){
-            //連線成功在 console 中打印訊息
-            console.log('success connect!')
-            //設定監聽
-            initWebSocket()
-        }
-    },[ws]);
-	const initWebSocket = () => {
-		//對 getMessage 設定監聽，如果 server 有透過 getMessage 傳送訊息，將會在此被捕捉
-		ws.on('getMessage', message => {
-			console.log(message)
-		})
-		ws.on('getMessageAll', message => {
-			console.log(message)
-		})
-		ws.on('getMessageLess', message => {
-			console.log(message)
-		})
+const {
+	sendLocalMessageAction,
+	sendGlobalMessageAction,
+	sendBroadcastMessageAction,
+} = messageActions;
+
+function App({
+	sendLocalMessageAction,
+	sendGlobalMessageAction,
+	sendBroadcastMessageAction,
+	messageReducer,
+}) {
+	const [message, setMessage] = useState('');
+	function _handleClickLocalMessage() {
+		sendLocalMessageAction(message);
+		setMessage('')
 	}
-	const sendMessage = (name) => {
-		ws.emit(name, `收到訊息囉！ ${name}`)
+	function _handleClickGlobalMessage() {
+		sendGlobalMessageAction(message);
+		setMessage('')
+	}
+	function _handleClickBroadCastMessage() {
+		sendBroadcastMessageAction(message);
+		setMessage('')
 	}
 	return (
-		<div>
-			<input type='button' value='送出訊息，只有自己收到回傳' onClick={() => { sendMessage('getMessage') }} />
-			<input type='button' value='送出訊息，讓所有人收到回傳' onClick={() => { sendMessage('getMessageAll') }} />
-			<input type='button' value='送出訊息，除了自己外所有人收到回傳' onClick={() => { sendMessage('getMessageLess') }} />
+		<div className="App">
+			<header className="App-header">
+			<div className="title">Redux Stock.io demo (messages)</div>
+			<Card>
+				<p>Local: {messageReducer.local_message}</p>
+				<p>Global: {messageReducer.global_message}</p>
+				<p>Broadcast: {messageReducer.broadcast_message}</p>
+			</Card>
+			<Input onChange={e => setMessage(e.target.value)} value={message} />
+			<div className="buttons">
+				<Button onClick={() => { _handleClickLocalMessage()}} >Local message</Button>
+				<Button onClick={() => { _handleClickGlobalMessage() }} >Global message</Button>
+				<Button onClick={() => { _handleClickBroadCastMessage() }} >Broadcast message</Button>
+			</div>
+			</header>
 		</div>
 	)
 }
 
-export default App;
+function mapStateToProps(state) {
+	return {
+		messageReducer: { ...state.messageReducer },
+	};
+}
+
+function mapDispatchToProps(dispatch) {
+	return {
+		sendLocalMessageAction: (message) => dispatch(sendLocalMessageAction(message)),
+		sendGlobalMessageAction: (message) => dispatch(sendGlobalMessageAction(message)),
+		sendBroadcastMessageAction: (message) => dispatch(sendBroadcastMessageAction(message)),
+	};
+}
+
+export default connect(mapStateToProps, mapDispatchToProps)(App);
