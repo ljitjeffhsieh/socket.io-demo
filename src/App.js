@@ -33,7 +33,7 @@ function App({
 	return (
 		<div className="App">
 			<header className="App-header">
-			<div className="title">Redux Stock.io demo (messages)</div>
+			<div className="title">Stock.io demo (messages)</div>
 			<Card>
 				<p>Local: {messageReducer.local_message}</p>
 				<p>Global: {messageReducer.global_message}</p>
